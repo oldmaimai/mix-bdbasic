@@ -6,7 +6,9 @@ object SparkTest {
   def main(args: Array[String]): Unit = {
     // Local
     val spark = new SparkContext(new SparkConf()
-      .setMaster("local").setAppName("Test")
+      // local[2] 起两个线程
+      //.setMaster("local")
+      .setAppName("Test")
     )
     //spark.setCheckpointDir("/user/mai/input")
 
