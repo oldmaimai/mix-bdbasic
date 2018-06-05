@@ -27,6 +27,8 @@ fun1("dd")
 "i am a chinese".split(" ").sortWith(_.length < _.length)
 "i am a chinese".split(" ").sortWith((x, y) => x.length < y.length)
 
+(1.5+12.08)*(1.5+4+5+2.55+3.3+4.16)-(5+2.55+3.3+4.16)*(12.08-4.08+1.5)/2
+
 
 
 
