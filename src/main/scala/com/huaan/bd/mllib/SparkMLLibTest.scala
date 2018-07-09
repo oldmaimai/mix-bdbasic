@@ -1,13 +1,98 @@
 package com.huaan.bd.mllib
 
+import org.apache.spark.mllib.linalg
+import org.apache.spark.mllib.linalg.distributed.RowMatrix
+import org.apache.spark.mllib.linalg.{Matrices, Vectors}
+import org.apache.spark.mllib.regression.LabeledPoint
+import org.apache.spark.mllib.stat.Statistics
+import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.{SparkConf, SparkContext}
 
-object SparkTest {
+object SparkMLLibTest {
   def main(args: Array[String]): Unit = {
     val conf = new SparkConf().setMaster("local").setAppName("SparkTest example")
     val sc = new SparkContext(conf)
     // 1. 测试RDD的基本API
-    rddApiTest(sc)
+    //rddApiTest(sc)
+    // 2. mllib基本概念
+    mllibBasicTest(sc)
+
+
+  }
+
+  private def mllibBasicTest(sc: SparkContext) = {
+    println()
+    val vd: linalg.Vector = Vectors.dense(2, 0, 6)
+    println(vd(2))
+    // 向量标签
+    val pos = LabeledPoint(1, vd)
+    println(pos.features)
+    println(pos.label)
+
+    val vs: linalg.Vector = Vectors.sparse(4, Array(0, 1, 2, 3), Array(9, 5, 0, 7))
+    println(vs(2))
+    val neg = LabeledPoint(2, vs)
+    println(neg.features)
+    println(neg.label)
+
+    println("从文件中创建向量标签")
+    val mu = MLUtils.loadLibSVMFile(sc, "E:\\learning\\github\\mix-bdbasic\\files\\loadLibSVMFile.txt")
+    mu.foreach(println)
+
+    println("本地矩阵")
+    val mx = Matrices.dense(2, 3, Array(1, 2, 3, 4, 5, 6))
+    println(mx)
+
+    println("行矩阵")
+    val rdd = sc.textFile("E:\\learning\\github\\mix-bdbasic\\files\\RowMatrix.txt")
+      .map(_.split(" ").map(_.toDouble))
+      .map(line => Vectors.dense(line))// 每一行转化为Vector格式
+    val rm = new RowMatrix(rdd)
+    println(rm)
+    println(rm.numRows())
+    println(rm.numCols())
+
+    println("=============数理统计===============")
+    val rdd2 = sc.textFile("E:\\learning\\github\\mix-bdbasic\\files\\testSummary.txt")
+      .map(_.split(" ").map(_.toDouble))
+      .map(line => Vectors.dense(line))// 每一行转化为Vector格式
+    val summary = Statistics.colStats(rdd2)
+    println(summary.mean)
+    println(summary.variance)
+    println(summary.normL1)
+    println(summary.normL2)
+
+    println("=============两组数据的相关系数============")
+    val corrX = sc.textFile("E:\\learning\\github\\mix-bdbasic\\files\\testCorrectX.txt")
+      .flatMap(_.split(' ').map(_.toDouble))
+    val corrY = sc.textFile("E:\\learning\\github\\mix-bdbasic\\files\\testCorrectY.txt")
+      .flatMap(_.split(' ').map(_.toDouble))
+    val correlation = Statistics.corr(corrX, corrY)
+    println(correlation)
+
+    println("==============分层抽样===============")
+    // 原始数据转化成对应的map，[数据，标签]
+    val data = sc.textFile("E:\\learning\\github\\mix-bdbasic\\files\\testStratifiedSampling.txt")
+      .map(row => {
+        if (row.length == 3)
+          {
+            (row, 1)
+          }
+        else
+          {
+            (row, 2)
+          }
+      })
+    // 下面进行抽样
+    // 设定抽样格式
+//    val fractions =  (List(("aa", 0.2))).toMap
+//    val approxSample = data.sampleBy
+    // Key(withReplacement = false, fractions, 0)
+//    approxSample.foreach(println)
+
+    println("卡方校验")
+    val vd1 = Vectors.dense(1, 2, 3, 4, 5)
+    println(Statistics.chiSqTest(vd1))
 
   }
 
